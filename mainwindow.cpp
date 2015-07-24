@@ -4,6 +4,8 @@
 #include <QtSerialPort/QSerialPortInfo>
 #include "settingsdialog.h"
 #include <QMessageBox>
+#include <QDebug>
+#include <memory>
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -11,14 +13,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 
 {
-
     this->settings = new SettingsDialog;
     ui->setupUi(this);
-    this->serial=new QSerialPort;
-    connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this,
-            SLOT(handleError(QSerialPort::SerialPortError)));
-
-    connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
+    this->reader=std::make_shared<DmmReader>(new QSerialPort);
+    connect(reader.get(),SIGNAL(valueChanged()),this,SLOT(valueChanged()));
 }
 
 MainWindow::~MainWindow()
@@ -26,45 +24,27 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::readData()
-{
-    current.append(serial->readAll());
-    if(current.size()>=14){
-        packetData.clear();
-        packetData.fill(false,14*8);
-        QString text="";
-        if(!current[0] & 0x10){
-            current.clear();
-            this->ui->debugText->setText("Packet Error");
-            return;
-        }
-        for(size_t b=0;b<current.size();b++,text+="\n"){
-            for(size_t i = 0; i < 8; i++){
-                bool bit = current[b] & (1 << i);
-                text+=bit?"1":"0";
-                packetData[b+i]=bit;
-            }
-        }
-        this->ui->debugText->setText(text);
-        current.clear();
+void MainWindow::valueChanged(){
+    this->ui->lcdNumber->display(this->reader->value);
+    QString unitText="";
+    DmmReader::Unit unit=this->reader->unit;
+    switch(unit){
+        case DmmReader::Unit::A:
+            unitText="A";
+        break;
+        case DmmReader::Unit::Celsius:
+            unitText="°C";
+        break;
+        case DmmReader::Unit::V:
+            unitText="V";
+        break;
+        default:
+            unitText="";
+        break;
     }
+    this->ui->unitLabel->setText(unitText);
 }
 
-void MainWindow::decodeData(QBitArray& data){
-    QString text="";
-    for(size_t i=0;i<data.size();i++)
-        text+=data.testBit(i)?"1":"0";
-    this->ui->debugText->setText(text);
-}
-
-void MainWindow::handleError(QSerialPort::SerialPortError error)
-{
-    if (error == QSerialPort::ResourceError) {
-        QMessageBox::critical(this, tr("Critical Error"), serial->errorString());
-        serial->close();
-        ui->debugText->setText("Error");
-    }
-}
 
 void MainWindow::on_settingsButton_clicked()
 {
@@ -74,12 +54,12 @@ void MainWindow::on_settingsButton_clicked()
 void MainWindow::on_connectButton_clicked()
 {
     SettingsDialog::Settings p = settings->settings();
-    serial->setPortName(p.name);
-    serial->setBaudRate(p.baudRate);
-    serial->setDataBits(p.dataBits);
-    serial->setParity(p.parity);
-    serial->setStopBits(p.stopBits);
-    serial->setFlowControl(p.flowControl);
+    this->reader->serial->setPortName(p.name);
+    this->reader->serial->setBaudRate(p.baudRate);
+    this->reader->serial->setDataBits(p.dataBits);
+    this->reader->serial->setParity(p.parity);
+    this->reader->serial->setStopBits(p.stopBits);
+    this->reader->serial->setFlowControl(p.flowControl);
     ui->debugText->setText("Connected");
-    this->connected=serial->open(QIODevice::ReadWrite);
+    this->connected=this->reader->serial->open(QIODevice::ReadWrite);
 }

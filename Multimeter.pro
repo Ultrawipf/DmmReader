@@ -16,10 +16,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    settingsdialog.cpp
+    settingsdialog.cpp \
+    dmmreader.cpp
 
 HEADERS  += mainwindow.h \
-    settingsdialog.h
+    settingsdialog.h \
+    dmmreader.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui
