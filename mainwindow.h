@@ -31,7 +31,14 @@ private:
     SettingsDialog* settings;
     std::shared_ptr<DmmReader> reader;
 
+    typedef DmmReader::Unit uName;
+    const std::map<uName,QString> units{{uName::A,"A"},{uName::Celsius,"°C"},{uName::V,"V"},{uName::Farad,"F"},{uName::Hz,"Hz"},{uName::percent,"%"},{uName::Ohm,"Ω"}};
 
+    typedef DmmReader::Prefix pName;
+    const std::map<pName,QString> prefixes{{pName::k,"k"},{pName::u,"µ"},{pName::n,"n"},{pName::m,"m"},{pName::M,"M"},{pName::none,""}};
+
+    typedef DmmReader::Mode mName;
+    const std::map<mName,QString> modes{{mName::AC,"AC"},{mName::DC,"DC"},{mName::Beep,"↔"},{mName::Temp,"Temp"},{mName::Diode,"►|"}};
 };
 
 #endif // MAINWINDOW_H

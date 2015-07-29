@@ -25,24 +25,17 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::valueChanged(){
-    this->ui->lcdNumber->display(this->reader->value);
-    QString unitText="";
-    DmmReader::Unit unit=this->reader->unit;
-    switch(unit){
-        case DmmReader::Unit::A:
-            unitText="A";
-        break;
-        case DmmReader::Unit::Celsius:
-            unitText="°C";
-        break;
-        case DmmReader::Unit::V:
-            unitText="V";
-        break;
-        default:
-            unitText="";
-        break;
-    }
-    this->ui->unitLabel->setText(unitText);
+    uName unit=this->reader->unit;
+    pName prefix = this->reader->prefix;
+    mName mode = this->reader->mode;
+    QString prefixName=this->prefixes.at(prefix);
+    QString unitName=this->units.at(unit);
+    QString modeName=this->modes.at(mode);
+
+    this->ui->debugText->setText("Value: "+QString::number(this->reader->getValue())+unitName);
+    this->ui->unitLabel->setText(prefixName+unitName);
+    this->ui->lcdNumber->display(this->reader->getRawValue());
+    this->ui->modeLabel->setText("Mode: "+modeName);
 }
 
 

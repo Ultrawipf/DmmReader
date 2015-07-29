@@ -54,6 +54,8 @@ double DmmReader::decodeData(QByteArray& d){
         this->mode=Mode::AC;
     else if(d[10]&0x1){
         this->mode = Mode::Beep;
+    }else if(d[9]&0x1){
+        this->mode = Mode::Diode;
     }
 
     if(d[9]&0x8){
@@ -66,12 +68,12 @@ double DmmReader::decodeData(QByteArray& d){
         this->prefix = Prefix::m;
     }else if(d[10]&0x2){
         this->prefix = Prefix::M;
-    }
+    }else
+        this->prefix = Prefix::none;
 
 
-    if(d[9]&0x1){
-        this->unit = Unit::Diode;
-    }else if(d[10]&0x4){
+
+    if(d[10]&0x4){
         this->unit = Unit::percent;
     }else if(d[11]&0x8){
         this->unit = Unit::Farad;
@@ -89,7 +91,6 @@ double DmmReader::decodeData(QByteArray& d){
     /*Decode 7-Segment
     0:C 1:B 2:A 8:G 9:F 10:E 11:D 12:comma
     */
-
     int divider = 0;
     double curValue=0;
     for(int seg=0;seg<4;seg++){
